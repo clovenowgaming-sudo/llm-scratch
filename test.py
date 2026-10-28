@@ -1,0 +1,7 @@
+ref = open("out/ref.bin", "rb").read()
+c = open("out/c_out.bin", "rb").read().rstrip(b"\n")
+n = min(len(ref), len(c))
+same = sum(1 for a, b in zip(ref[:n], c[:n]) if a == b)
+print("PyTorch:", ref.decode("utf-8", "replace"))
+print("C      :", c.decode("utf-8", "replace"))
+print("Cocok %d/%d byte" % (same, n))

@@ -1,0 +1,43 @@
+name: train-llm
+
+on:
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: "Durasi training (menit)"
+        default: "290"
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependensi
+        run: |
+          pip install numpy datasets
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Training
+        env:
+          TRAIN_MINUTES: ${{ inputs.minutes }}
+        run: python train.py
+
+      - name: Build mesin C dan tes kecocokan
+        run: |
+          gcc -O3 -o out/run-linux run.c -lm
+          cp run.c out/run.c
+          ./out/run-linux out/model.bin -t 0 -n 40 -p "Indonesia" > out/c_out.bin
+          python test.py
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: llm-hasil
+          path: out/
+          retention-days: 14
